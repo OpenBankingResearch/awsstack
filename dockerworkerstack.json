@@ -1,0 +1,30 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Resources": {
+        "Ec2Instance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "ImageId": "ami-366f5f4f",
+		"AvailabilityZone" : "eu-west-1a",
+		"KeyName" : "DockerClusterSSH",
+                "InstanceType": "t2.medium",
+                "SecurityGroupIds": [
+                    "sg-2b509056"
+                ],
+                "SubnetId": "subnet-10538266",
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash\n",
+                                "docker swarm join --token SWMTKN-1-5bu0xgh9yn8adi6idd7mxs0hwegu96xe4j0c3oah12ahimd9yf-0z669xcq76ccb6puwzg8btsti 52.50.41.159:2377",
+                                "\n"
+                            ]
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
