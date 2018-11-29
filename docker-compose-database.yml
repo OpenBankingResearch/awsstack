@@ -1,0 +1,109 @@
+version: "3.4"
+
+volumes:
+  elk:
+    name: 'elk'
+  mongo:
+    name: 'mongodb'
+  mongoconfig:
+    name: 'mongodbconfig'
+  redis:
+    name: 'redis-data'
+  rabbit:
+    name: 'rabbit'
+
+services:
+
+  mongodb:
+    image: mongo:3.7
+    user: mongodb
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=societyhack
+    volumes:
+      - mongo:/data/db
+      - mongoconfig:/data/configdb
+    ports:
+      - 37017:27017
+    deploy:
+      endpoint_mode: vip
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+          condition: on-failure
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role==database
+
+  elk:
+    image: sebp/elkx:562
+    ports:
+      - 5602:5601
+      - 9201:9200
+      - 5002:5000
+    environment:
+      - ELASTICSEARCH_USER=elastic 
+      - LOGSTASH_USER=elastic
+      - KIBANA_USER=kibana
+      - ELASTICSEARCH_PASSWORD=Elastic-pwd1
+      - LOGSTASH_PASSWORD=Elastic-pwd1
+      - KIBANA_PASSWORD=Elastic-pwd1
+    volumes:
+      - elk:/var/lib/elasticsearch
+    deploy:
+      endpoint_mode: vip
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+          condition: on-failure
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role==database
+  redis:
+    image: redis:4.0.5-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: redis
+    ports:
+         - 7379:6379 
+    volumes:
+      - redis:/data
+    deploy:
+      endpoint_mode: vip
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+          condition: on-failure
+      replicas: 1
+      placement:
+        constraints:
+          - node.labels.role==database
+  rabbit:
+      hostname: rabbit
+      image: rabbitmq:3.7-management
+      environment:
+          - RABBITMQ_DEFAULT_USER = rabbit
+          - RABBITMQ_DEFAULT_PASS = societyhack
+      ports:
+          - "8090:15672"
+          - "8091:5672"
+          - "8092:5671"
+      volumes:
+          - rabbit:/var/lib/rabbitmq
+      deploy:
+        endpoint_mode: vip
+        update_config:
+          parallelism: 1
+          delay: 10s
+        restart_policy:
+          condition: on-failure
+        replicas: 1
+        placement: 
+          constraints:
+            - node.labels.role==database
+#docker stack deploy --compose-file docker-compose-database.yml motix-db
