@@ -1,0 +1,87 @@
+version: "3.4"
+services:
+  creditcard:
+     image: societyhack/creditcard-api:latest
+     ports:
+       - 8084:80
+     deploy:
+       endpoint_mode: vip
+       update_config:
+         parallelism: 1
+         delay: 10s
+       restart_policy:
+           condition: on-failure
+       replicas: 4
+       placement:
+         constraints:
+           - node.labels.role==microservices
+  #         - node.labels.role!=devops
+  user:
+     image: societyhack/user-api:latest
+     ports:
+       - 8085:80
+     deploy:
+       endpoint_mode: vip
+       update_config:
+         parallelism: 1
+         delay: 10s
+       restart_policy:
+           condition: on-failure
+       replicas: 4
+       placement:
+         constraints:
+           - node.labels.role==microservices
+#           - node.labels.role!=devops
+  mortgage:
+     image: societyhack/mortgage-api:latest
+     ports:
+       - 8086:8100
+     deploy:
+       endpoint_mode: vip
+       update_config:
+         parallelism: 1
+         delay: 10s
+       restart_policy:
+           condition: on-failure
+       replicas: 4
+       placement:
+         constraints:
+           - node.labels.role==microservices
+ #          - node.labels.role!=devops
+  gateway:
+     image: societyhack/gateway:latest
+     ports:
+       - 8087:8082
+     deploy:
+       endpoint_mode: vip
+       update_config:
+         parallelism: 1
+         delay: 10s
+       restart_policy:
+           condition: on-failure
+       replicas: 4
+       placement:
+         constraints:
+           - node.labels.role==microservices
+  #         - node.labels.role!=devops
+  audit:
+     image: societyhack/audit:latest
+     ports:
+       - 8088:8081
+     environment:
+       - SVC_ELASTIC_URL=elastic:changeme@52.50.41.159:9201
+       - SVC_LOGSTASH_URL=52.50.41.159
+       - SVC_LOGSTASH_PORT=5002
+       - LOG_API=http://localhost:8081/log/bulk
+       - QUEUE_URL=guest:guest@52.50.41.159:8091
+     deploy:
+       endpoint_mode: vip
+       update_config:
+         parallelism: 1
+         delay: 10s
+       restart_policy:
+           condition: on-failure
+       replicas: 2
+       placement:
+         constraints:
+          - node.labels.role==microservices
